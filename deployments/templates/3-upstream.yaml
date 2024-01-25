@@ -1,0 +1,12 @@
+{{ if .Values.glooingress.enabled }}
+apiVersion: gloo.solo.io/v1
+kind: Upstream
+metadata:
+  name: statemachine2_transactional_kafka
+  namespace: {{ .Release.Namespace }}
+spec:
+  kube:
+    serviceName: statemachine2_transactional_kafka
+    serviceNamespace: {{ .Release.Namespace }}
+    servicePort: {{ .Values.ports.http }}
+{{- end }}

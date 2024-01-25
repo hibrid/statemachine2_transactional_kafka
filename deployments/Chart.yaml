@@ -1,0 +1,9 @@
+apiVersion: v2
+description: A Helm chart for statemachine2 Kafka Transaction Example
+name: statemachine2_transactional_kafka
+version: 0.15.24
+maintainers:
+  - name: gilbert mena
+    email: gilbert@gmena.net
+    url: https://github.com/hibrid
+home: https://github.com/hibrid/statemachine2_transactional_kafka

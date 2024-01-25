@@ -1,0 +1,26 @@
+{{ if .Values.glooingress.enabled }}
+apiVersion: gateway.solo.io/v1
+kind: RouteTable
+metadata:
+  name: statemachine2_transactional_kafka
+  namespace: {{ .Release.Namespace }}
+  labels:
+    namespace: {{ .Release.Namespace }}
+    app: statemachine2_transactional_kafka
+spec:
+  routes:
+  - matchers:
+    - methods:
+      - GET
+      - POST
+      - DELETE
+      regex: /v1/statemachine2_transactional_kafka
+    routeAction:
+      single:
+        upstream:
+          name: statemachine2
+    routeAction:
+      single:
+        upstream:
+          name: statemachine2
+{{- end }}
