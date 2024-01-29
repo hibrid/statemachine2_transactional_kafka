@@ -63,13 +63,15 @@ to quickly create a Cobra application.`,
 				"enable.idempotence":     true,
 				"go.logs.channel.enable": true,
 				"go.logs.channel":        logsChan,
-				"security.protocol":      "SASL_SSL",
-				"sasl.mechanism":         "SCRAM-SHA-512",
+				"security.protocol":      "SASL_PLAINTEXT",
+				"sasl.mechanisms":        "SCRAM-SHA-512",
 				"sasl.username":          kafkaUsername,
 				"sasl.password":          kafkaPassword,
 			},
 			WaitGroup: &globalWg,
 		})
+		fmt.Println(kafkaUsername, kafkaPassword)
+		generator.GenerateRandomMessages()
 		globalWg.Add(1)
 		err := generator.Simulate()
 		if err != nil {
@@ -80,7 +82,7 @@ to quickly create a Cobra application.`,
 
 func init() {
 	rootCmd.AddCommand(simulatorCmd)
-
+	viper.AutomaticEnv()
 	simulatorCmd.Flags().Float64VarP(&ratePerSecond, "ratePerSecond", "r", 3.25,
 		"number of orders per second. Default is 3.25")
 	if viper.GetFloat64("ratePerSecond") != 0 {
@@ -91,34 +93,33 @@ func init() {
 	if viper.GetInt64("messageCount") != 0 {
 		messageCount = viper.GetInt64("messageCount")
 	}
-	simulatorCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "show verbose output")
-	if viper.GetBool("verbose") != false {
-		verbose = viper.GetBool("verbose")
+	simulatorCmd.Flags().BoolVarP(&verbose, "VERBOSE", "v", false, "show verbose output")
+
+	verbose = true //viper.GetBool("VERBOSE")
+
+	simulatorCmd.Flags().StringVarP(&inputTopic, "INPUT_TOPIC", "i", "input", "input topic")
+	if viper.GetString("INPUT_TOPIC") != "" {
+		inputTopic = viper.GetString("INPUT_TOPIC")
 	}
 
-	simulatorCmd.Flags().StringVarP(&inputTopic, "inputTopic", "i", "input", "input topic")
-	if viper.GetString("inputTopic") != "" {
-		inputTopic = viper.GetString("inputTopic")
+	simulatorCmd.Flags().StringVarP(&outputTopic, "OUTPUT_TOPIC", "u", "output", "output topic")
+	if viper.GetString("OUTPUT_TOPIC") != "" {
+		outputTopic = viper.GetString("OUTPUT_TOPIC")
 	}
 
-	simulatorCmd.Flags().StringVarP(&outputTopic, "outputTopic", "u", "output", "output topic")
-	if viper.GetString("outputTopic") != "" {
-		outputTopic = viper.GetString("outputTopic")
+	simulatorCmd.Flags().StringVarP(&bootstrapServers, "KAFKA_BROKERS", "b", "localhost:9092", "bootstrap servers")
+	if viper.GetString("KAFKA_BROKERS") != "" {
+		bootstrapServers = viper.GetString("KAFKA_BROKERS")
 	}
 
-	simulatorCmd.Flags().StringVarP(&bootstrapServers, "bootstrapServers", "b", "localhost:9092", "bootstrap servers")
-	if viper.GetString("bootstrapServers") != "" {
-		bootstrapServers = viper.GetString("bootstrapServers")
+	simulatorCmd.Flags().StringVarP(&kafkaUsername, "KAFKA_USERNAME", "k", "kafka", "kafka username")
+	if viper.GetString("KAFKA_USERNAME") != "" {
+		kafkaUsername = viper.GetString("KAFKA_USERNAME")
 	}
 
-	simulatorCmd.Flags().StringVarP(&kafkaUsername, "kafkaUsername", "k", "kafka", "kafka username")
-	if viper.GetString("kafkaUsername") != "" {
-		kafkaUsername = viper.GetString("kafkaUsername")
-	}
-
-	simulatorCmd.Flags().StringVarP(&kafkaPassword, "kafkaPassword", "p", "kafka", "kafka password")
-	if viper.GetString("kafkaPassword") != "" {
-		kafkaPassword = viper.GetString("kafkaPassword")
+	simulatorCmd.Flags().StringVarP(&kafkaPassword, "KAFKA_PASSWORD", "p", "kafka", "kafka password")
+	if viper.GetString("KAFKA_PASSWORD") != "" {
+		kafkaPassword = viper.GetString("KAFKA_PASSWORD")
 	}
 
 }

@@ -2,11 +2,11 @@
 apiVersion: gloo.solo.io/v1
 kind: Upstream
 metadata:
-  name: statemachine2_transactional_kafka
+  name: statemachine2-transactional-kafka
   namespace: {{ .Release.Namespace }}
 spec:
   kube:
-    serviceName: statemachine2_transactional_kafka
+    serviceName: statemachine2-transactional-kafka
     serviceNamespace: {{ .Release.Namespace }}
     servicePort: {{ .Values.ports.http }}
 {{- end }}

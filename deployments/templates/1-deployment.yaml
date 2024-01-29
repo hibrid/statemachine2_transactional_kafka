@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: statemachine2_transactional_kafka
+    app: statemachine2-transactional-kafka
 {{ include "charts.labels.standard" .}}
-  name: statemachine2_transactional_kafka
+  name: statemachine2-transactional-kafka
   namespace: {{.Release.Namespace}}
 {{ if .Values.deployment.annotations }}
     {{- .Values.deployment.annotations | toYaml | nindent 4 }}
@@ -13,7 +13,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: statemachine2_transactional_kafka
+      app: statemachine2-transactional-kafka
       app.kubernetes.io/name: {{ include "charts.name" . }}
       app.kubernetes.io/instance: {{ .Release.Name }}
   replicas: {{ .Values.deployment.replicas }}
@@ -25,7 +25,7 @@ spec:
         {{- .Values.podAnnotations | toYaml | nindent 8 }}
 {{- end }}
       labels:
-        app: statemachine2_transactional_kafka
+        app: statemachine2-transactional-kafka
         app.kubernetes.io/name: {{ include "charts.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
@@ -38,17 +38,18 @@ spec:
         {{- toYaml .Values.securityContext | nindent 8 }}
       containers:
       - env:
+        {{ include "charts.kafka.common" .}}
         - name: HTTP_LISTEN
           value: :{{.Values.ports.http}}
         - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: statemachine2_transactional_kafka
+              name: statemachine2-transactional-kafka
               key: DatabaseUsername
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: statemachine2_transactional_kafka
+              name: statemachine2-transactional-kafka
               key: DatabasePassword
         - name: DB_PORT
           value: :{{.Values.deployment.env.db.port}}
@@ -56,6 +57,14 @@ spec:
           value: {{.Values.deployment.env.db.host}}
         - name: DB_NAME
           value: {{.Values.deployment.env.db.name}}
+        - name: LOG_LEVEL
+          value: {{.Values.deployment.env.loglevel}}
+        - name: VERBOSE
+          value: {{.Values.deployment.env.verbose}}
+        - name: INPUT_TOPIC
+          value: {{.Values.deployment.env.input_topic}}
+        - name: OUTPUT_TOPIC
+          value: {{.Values.deployment.env.output_topic}}
         image: "{{ .Values.deployment.image }}"
         securityContext:
           {{- .Values.podSecurityContext | toYaml | nindent 10 }}

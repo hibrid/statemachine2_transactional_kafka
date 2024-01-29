@@ -2,11 +2,11 @@
 apiVersion: gateway.solo.io/v1
 kind: RouteTable
 metadata:
-  name: statemachine2_transactional_kafka
+  name: statemachine2-transactional-kafka
   namespace: {{ .Release.Namespace }}
   labels:
     namespace: {{ .Release.Namespace }}
-    app: statemachine2_transactional_kafka
+    app: statemachine2-transactional-kafka
 spec:
   routes:
   - matchers:
@@ -14,7 +14,7 @@ spec:
       - GET
       - POST
       - DELETE
-      regex: /v1/statemachine2_transactional_kafka
+      regex: /v1/statemachine2-transactional-kafka
     routeAction:
       single:
         upstream:

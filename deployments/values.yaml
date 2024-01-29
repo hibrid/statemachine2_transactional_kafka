@@ -10,7 +10,7 @@ ports:
 deployment:
   replicas: 1
   # -- default Docker image
-  image: statemachine-go-statemachine2-transactional-kafka-image
+  image: statemachine2-transactional-kafka-image
   env:
     db:
       name: statemachine
@@ -30,6 +30,10 @@ deployment:
       tlsEnabled: false
       # -- whether to require TLS for kafka
       requireSSL: false
+    loglevel: ERROR
+    verbose: "sure"
+    input_topic: test_in
+    output_topic: test_out
   serviceAccount:
     # -- whether to create a service account
     create: false
@@ -57,6 +61,7 @@ kafka:
   configmapName: kafka
   # -- name of the configmap containing the kafka broker and credentials to use
   secretName: kafka
+  passwordKeyName: password
 linkerdsupport: 
   enabled: false
 glooingress:

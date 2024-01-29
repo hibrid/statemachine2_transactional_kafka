@@ -79,6 +79,7 @@ func (s *Simulator) sendIngressMessageEvent() {
 	message := s.messages.Messages[rand.Intn(len(s.messages.Messages))]
 	producer := s.kafkaProducer
 	messageBytes, err := json.Marshal(message)
+
 	if err != nil {
 		panic(err)
 	}
@@ -91,11 +92,19 @@ func (s *Simulator) sendIngressMessageEvent() {
 		if err.(kafka.Error).Code() == kafka.ErrQueueFull {
 			// Producer queue is full, skip this event.
 			// A proper application should retry the Produce().
-			app.Log.Warn(fmt.Sprintf("Generator: Warning: unable to produce event: %v", err))
+			logMsg := fmt.Sprintf("Generator: Warning: unable to produce event: %v", err)
+			app.Log.Warn(logMsg)
+			if s.Verbose {
+				fmt.Println(logMsg)
+			}
 			return
 		}
+		logMsg := fmt.Sprintf("Generator: Failed to produce message: %v", err)
+		if s.Verbose {
+			fmt.Println(logMsg)
+		}
 		// Treat all other errors as fatal.
-		panic(fmt.Sprintf("Generator: Failed to produce message: %v", err))
+		panic(logMsg)
 	}
 
 }
@@ -103,7 +112,11 @@ func (s *Simulator) sendIngressMessageEvent() {
 func (s *Simulator) GenerateRandomMessages() {
 	var messages Messages
 	for i := int64(0); i < s.NumberOfMessages; i++ {
-		messages.Messages = append(messages.Messages, generateRandomMessage())
+		message := generateRandomMessage()
+		messages.Messages = append(messages.Messages, message)
+		if s.Verbose {
+			fmt.Println(message)
+		}
 	}
 	s.messages = messages
 }
@@ -173,15 +186,69 @@ func (s *Simulator) Simulate() error {
 					zap.Int64("calculate diff", diff))
 			}
 		case e := <-s.kafkaProducer.Events():
+			switch ev := e.(type) {
+			case *kafka.Message:
+				// Message delivery report
+				m := ev
+				if m.TopicPartition.Error != nil {
+					fmt.Printf("Delivery failed: %v\n", m.TopicPartition.Error)
+				} else {
+					fmt.Printf("Delivered message to topic %s [%d] at offset %v\n",
+						*m.TopicPartition.Topic, m.TopicPartition.Partition, m.TopicPartition.Offset)
+				}
+
+			case kafka.Error:
+				// Generic client instance-level errors, such as
+				// broker connection failures, authentication issues, etc.
+				//
+				// These errors should generally be considered informational
+				// as the underlying client will automatically try to
+				// recover from any errors encountered, the application
+				// does not need to take action on them.
+				//
+				// But with idempotence enabled, truly fatal errors can
+				// be raised when the idempotence guarantees can't be
+				// satisfied, these errors are identified by
+				// `e.IsFatal()`.
+
+				e := ev
+				if e.IsFatal() {
+					// Fatal error handling.
+					//
+					// When a fatal error is detected by the producer
+					// instance, it will emit kafka.Error event (with
+					// IsFatal()) set on the Events channel.
+					//
+					// Note:
+					//   After a fatal error has been raised, any
+					//   subsequent Produce*() calls will fail with
+					//   the original error code.
+					fmt.Printf("FATAL ERROR: %v: terminating\n", e)
+
+				} else {
+					fmt.Printf("Error: %v\n", e)
+				}
+
+			default:
+				fmt.Printf("Ignored event: %s\n", ev)
+			}
 			// Handle delivery reports
 			m, ok := e.(*kafka.Message)
 			if !ok {
-				app.Log.Info(fmt.Sprintf("Generator: Ignoring producer event %v", e))
+				logMsg := fmt.Sprintf("Generator: Ignoring producer event %v", e)
+				app.Log.Info(logMsg)
+				if s.Verbose {
+					fmt.Println(logMsg)
+				}
 				continue
 			}
 
 			if m.TopicPartition.Error != nil {
-				app.Log.Error(fmt.Sprintf("Generator: Message delivery failed: %v: ignoring", m.TopicPartition))
+				logMsg := fmt.Sprintf("Generator: Message delivery failed: %v: ignoring", m.TopicPartition)
+				app.Log.Error(logMsg)
+				if s.Verbose {
+					fmt.Println(logMsg)
+				}
 				continue
 			}
 		case <-s.Context.Done():

@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -32,7 +33,7 @@ func getRandomEventType() eventType {
 }
 
 func generateRandomAccountID() string {
-	return "account-" + string(rand.Intn(1000000))
+	return "account-" + fmt.Sprint(rand.Intn(1000000))
 }
 
 func generateRandomTransactionID() string {
@@ -49,14 +50,6 @@ func generateRandomMessage() Message {
 		TransactionID: generateRandomTransactionID(),
 		EventType:     getRandomEventType().String(),
 	}
-}
-
-func generateRandomMessages(numberOfMessages int64) Messages {
-	var messages Messages
-	for i := int64(0); i < numberOfMessages; i++ {
-		messages.Messages = append(messages.Messages, generateRandomMessage())
-	}
-	return messages
 }
 
 type rate float64

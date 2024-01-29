@@ -4,7 +4,7 @@ apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
   annotations:
-  name: statemachine2_transactional_kafka
+  name: statemachine2-transactional-kafka
   namespace: {{ .Release.Namespace }}
   labels:
 spec:
@@ -13,6 +13,6 @@ spec:
   scaleTargetRef:
     apiVersion: extensions/v1beta1
     kind: Deployment
-    name: statemachine2_transactional_kafka
+    name: statemachine2-transactional-kafka
   targetCPUUtilizationPercentage: {{ .Values.hpa.targetCPUUtilizationPercentage | default 50 }}
 {{- end }}
